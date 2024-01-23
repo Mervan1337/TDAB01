@@ -1,0 +1,315 @@
+---
+title: "Lab 2"
+author: "Mervan Palmér (merpa433)"
+date: '2023-10-09'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(Rlab)
+```
+
+3.1.1
+```{r}
+    set.seed(4711)
+    x1 <- rgamma(n = 10, shape = 4, scale = 1)
+    print(x1)
+    x2 <- rgamma(n = 100, shape = 4, scale = 1)
+    print(x2)
+```
+
+
+Fråga 1
+```{r}
+    llgamma <- function(x, alpha, beta) {
+        return(length(x) * (alpha * log(beta) - lgamma(alpha)) + (alpha - 1) * sum(log(x)) - (beta*sum(x)))
+    }
+
+    print(llgamma(x = x1, alpha = 2, beta = 2))
+```
+Fråga 2
+
+```{r}
+    alfa <- 4
+    betaSeq <- seq(0.01, 3, 0.01)
+    y1 <- numeric(0)
+    for (beta in betaSeq) {
+        y1 <- c(y1, llgamma(x = x1, alpha = alfa, beta = beta))
+    }
+    y2 <- numeric(0)
+    for (beta in betaSeq) {
+        y2 <- c(y2, llgamma(x = x2, alpha = alfa, beta = beta))
+    }
+```
+
+```{r, echo=FALSE}
+    plot(betaSeq, y1)
+    betaMaxX1 <- betaSeq[which.max(y1)]
+    print(paste("max value at beta =", betaMaxX1))
+    plot(betaSeq, y2)
+    betaMaxX2 <- betaSeq[which.max(y2)]
+    print(paste("max value at beta =", betaMaxX2))
+```
+y1 har sitt max vid 0.77
+y2 har sitt max vid 0.96
+
+```{r}
+    beta <- 1
+    alfaSeq <- seq(0.01, 10, 0.01)
+    y1 <- numeric(0)
+    for (alfa in alfaSeq) {
+        y1 <- c(y1, llgamma(x = x1, alpha = alfa, beta = beta))
+    }
+    y2 <- numeric(0)
+    for (alfa in alfaSeq) {
+        y2 <- c(y2, llgamma(x = x2, alpha = alfa, beta = beta))
+    }
+```
+```{r, echo=FALSE}
+    plot(alfaSeq, y1)
+    alfaMaxX1 <- alfaSeq[which.max(y1)]
+    print(paste("max value at alpha =", alfaMaxX1))
+    plot(alfaSeq, y2)
+    alfaMaxX2 <- alfaSeq[which.max(y2)]
+    print(paste("max value at alpha =", alfaMaxX2))
+```
+y1 har sitt max vid 5
+
+y2 har sitt max vid 4.13
+
+Fråga 4.
+
+Täthetsfunktionen för normalfördelning ges av:
+$$ f(x) = \frac{1}{\sqrt{2 \pi \sigma^2}} * e^{\frac{-1}{2} (\frac{(x - \mu)^2}{\sigma^2})} $$
+Eftersom värdena är oberoende kan sannolikheterna vi får multipliceras ihop med varandra:
+$$ \prod_{i=1}^{n} f(x_i) = \prod_{i=1}^{n} \frac{1}{\sqrt{2 \pi \sigma^2}} * e^{\frac{-1}{2} (\frac{(x_i - \mu)^2}{\sigma^2})} = $$
+
+$$ = (\frac{1}{\sqrt{2 \pi \sigma^2}})^n * \prod_{i=1}^{n} e^{\frac{-1}{2} (\frac{(x_i - \mu)^2}{\sigma^2})} $$
+
+Detta är likelyhood-funktionen, så vi tar log av denna för att få log-likelihoodfunktionen:
+
+$$ \ln{((\frac{1}{\sqrt{2 \pi \sigma^2}})^n * \prod_{i=1}^{n} e^{\frac{-1}{2} (\frac{(x_i - \mu)^2}{\sigma^2})})} =  $$
+
+$$ = \ln{((\frac{1}{\sqrt{2 \pi \sigma^2}})^n)}  + \sum_{i=1}^{n} \frac{-1}{2} (\frac{(x_i - \mu)^2}{\sigma^2}) = $$
+
+$$ = \frac{-n}{2} * \ln{(2 \pi \sigma^2)} + \frac{-1}{2} * \frac{1}{\sigma^2} * \sum_{i=1}^{n} (x_i - \mu)^2 = $$
+
+$$ = \frac{-n}{2} * \ln{(2 \pi \sigma^2)} + \frac{-1}{2\sigma^2} * \sum_{i=1}^{n} (x_i - \mu)^2 $$
+
+```{r}
+    llnorm <- function(x, mu, sigma2){
+      n <- length(x)
+      return((-n/2) * log(2*pi*sigma2) + (-1/(2*sigma2)) * sum((x - mu)^2))
+    }
+    print(llnorm(x = x1, mu = 2, sigma2 = 1))
+```
+Fråga 5.
+
+```{r}
+    sigma2 <- 1
+    y1 <- numeric(0)
+    y2 <- numeric(0)
+    muSeq <- seq(0, 10, 0.01)
+    for (mu in muSeq) {
+        y1 <- c(y1, llnorm(x = x1, mu = mu, sigma2 = sigma2))
+    }
+    for (mu in muSeq) {
+        y2 <- c(y2, llnorm(x = x2, mu = mu, sigma2 = sigma2))
+    }
+```
+
+```{r, echo=FALSE}
+    plot(muSeq, y1)
+    muMaxX1 <- muSeq[which.max(y1)]
+    print(paste("max value at alpha =", muMaxX1))
+    plot(muSeq, y2)
+    muMaxX2 <- muSeq[which.max(y2)]
+    print(paste("max value at alpha =", muMaxX2))
+```
+
+```{r}
+    y1 <- dgamma(x1, shape = alfaMaxX1, scale = betaMaxX1)
+    y2 <- dgamma(x2, shape = alfaMaxX2, scale = betaMaxX2)
+    y3 <- dnorm(x1, mean = muMaxX1, sd = 1)
+    y4 <- dnorm(x2, mean = muMaxX2, sd = 1)
+    
+    hist(y1)
+    hist(y2)
+    hist(y3)
+    hist(y4)
+    
+    hist(x1)
+    hist(x2)
+```
+
+Y1 och Y2 har fler värden kring högre sannolikhetsgrader vilket får mig att tro att det är en gammafördelning
+
+Y3 och Y4 har en stor del av värderna kring 0 vilket visar att en normalfördelning inte skapade x1 och x2
+
+
+3.2.1
+
+```{r}
+    gammaBetaMle <- function(x, alpha) {
+        return(length(x) * alpha / sum(x))
+    }
+    print(gammaBetaMle(x = x1, alpha = 4))
+    print(gammaBetaMle(x = x2, alpha = 4))
+```
+
+För x1 så maximeras sannolikheten för dessa värden då beta = 0.7683785 när alfa är 4
+
+För x2 så maximeras sannolikheten för dessa värden då beta = 0.9619473 när alfa är 4
+
+
+3.2.2
+
+Fråga 1
+
+```{r}
+    norm_mu_mle <- function(x) {
+        return(sum(x) / length(x))
+    }
+
+    norm_sigma2_mle <- function(x) {
+        xhat <- norm_mu_mle(x)
+        return(sum((x - xhat)^2) / length(x))
+    }
+    test_x <- 1:10
+    print(norm_mu_mle(x = test_x))
+    print(norm_sigma2_mle(x = test_x))
+```
+
+Fråga 2
+
+```{r}
+    set.seed(42)
+
+    y10 <- rnorm(n = 10, mean = 10, sd = 2) # Roten ur 4 är 2
+    y10000 <- rnorm(n = 10000, mean = 10, sd = 2)
+    
+    print(norm_mu_mle(x = y10))
+    print(norm_sigma2_mle(x = y10))
+    print(norm_mu_mle(x = y10000))
+    print(norm_sigma2_mle(x = y10000))
+```
+Den stora skillnaden är att den med 10 000 dragningar kommer värderna närmare my = 10 och sigma2 = 4 vilket är det vi skickar in i rnorm funktionen.
+Baserat på detta skulle vi förmodligen få väldigt nära my = 10 och sigma2 = 4 om vi går mot oändligheten
+
+3.3.1
+
+Fråga 1
+
+```{r}
+    
+    llbeta <- function(pair, x) {
+      return(-sum(dbeta(x, pair[1], pair[2], log = TRUE)))
+    }
+
+```
+
+Fråga 2
+  
+```{r}
+    x <- rbeta(n = 100, shape1 = 0.2, shape2 = 2)
+    hist(x)
+```
+
+
+Fråga 3
+Method "L-BFGS-B" is that of Byrd et. al. (1995) which allows box constraints, that is each variable can be given a lower and/or upper bound. The initial value must satisfy the constraints. This uses a limited-memory modification of the BFGS quasi-Newton method. If non-trivial bounds are supplied, this method will be selected, with a warning. 
+```{r}
+    optResult <- optim(par = c(1, 1), fn = llbeta, x = x, method = "L-BFGS-B", lower = 0.000001)
+    print(optResult$par)
+```
+
+Fråga 4
+
+För att vara en uppskattnings funktion blir de väldigt nära då alfa är 0,2 men uppskattnings ger oss 0,2211375 och att vi skickar in beta 2 men får 2.1439056. Men det är svårt med tanke på att det är just en uppskattning som görs att få exakt, lite som minsta kvadratmetoden i linjär algebra
+
+
+3.4.1
+
+Fråga 1.
+
+```{r}
+    n <- 2000
+    betaMle1 <- numeric(n)
+    betaMle2 <- numeric(n)
+    my1 <- numeric(n)
+    my2 <- numeric(n)
+    sigma1 <- numeric(n)
+    sigma2 <- numeric(n)
+
+    for (i in 1:n) {
+        x1 <- rgamma(n = 10, shape = 4, rate = 1)
+        x2 <- rgamma(n = 10000, shape = 4, rate = 1)
+        betaMle1[i] <- gammaBetaMle(x = x1, alpha = 4)
+        betaMle2[i] <- gammaBetaMle(x = x2, alpha = 4)
+
+        y1 <- rnorm(n = 10, mean = 10, sd = 2)
+        y2 <- rnorm(n = 10000, mean = 10, sd = 2)
+        my1[i] <- norm_mu_mle(x = y1)
+        my2[i] <- norm_mu_mle(x = y2)
+        sigma1[i] <- norm_sigma2_mle(x = y1)
+        sigma2[i] <- norm_sigma2_mle(x = y2)
+    }
+```
+```{r, echo=FALSE}
+    hist(betaMle1)
+    hist(betaMle2)
+    hist(my1)
+    hist(my2)
+    hist(sigma1)
+    hist(sigma2)
+```
+Slutsaten är att när vi tar n=10 000 så blir variansen mycket mindre än när vi har n = 10. Det är sigma1 är svårtolkad då den har få dragningar jämfört med sigma
+
+Fråga 2
+```{r}
+    n <- 2000
+    beta1_mle <- numeric(n)
+    beta2_mle <- numeric(n)
+    my1 <- numeric(n)
+    my2 <- numeric(n)
+    sigma1 <- numeric(n)
+    sigma2 <- numeric(n)
+    x1 <- rgamma(n = 10, shape = 4, rate = 1)
+    x2 <- rgamma(n = 10000, shape = 4, rate = 1)
+    y1 <- rnorm(n = 10, mean = 10, sd = 2)
+    y2 <- rnorm(n = 10000, mean = 10, sd = 2)
+
+    for (i in 1:n) {
+        beta1_mle[i] <- gammaBetaMle(x = sample(x1, 10, replace = TRUE), alpha = 4)
+        beta2_mle[i] <- gammaBetaMle(x = sample(x2, 10000, replace = TRUE), alpha = 4)
+        my1[i] <- norm_mu_mle(x = sample(y1, 10, replace = TRUE))
+        my2[i] <- norm_mu_mle(x = sample(y2, 10000, replace = TRUE))
+        sigma1[i] <- norm_sigma2_mle(x = sample(y1, 10, replace = TRUE))
+        sigma2[i] <- norm_sigma2_mle(x = sample(y2, 10000, replace = TRUE))
+    }
+```
+
+
+```{r, echo=FALSE}
+    hist(beta1_mle)
+    hist(beta2_mle)
+    hist(my1)
+    hist(my2)
+    hist(sigma1)
+    hist(sigma2)
+```
+
+Till skillnad från ovan blir dessa uppskattningar inte lika bra då vi har en mycket mer begränsad indata. Det ger att fel i dragningarna får en större inverkan på uppskattningarna som görs. Det syns tydligt på dragningar där n = 10.
+
+
+
+
+
+
+
+
+
+
+
+
